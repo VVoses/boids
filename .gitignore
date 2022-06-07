@@ -6,6 +6,10 @@
 # Node artifact files
 node_modules/
 dist/
+.yarn/
+.parcel-cache/
+.pnp*
+
 
 # Compiled Java class files
 *.class
@@ -47,4 +51,3 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
-

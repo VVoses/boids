@@ -1,0 +1,20 @@
+{
+  "name": "boids",
+  "source": "src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "packageManager": "yarn@3.2.1",
+  "devDependencies": {
+    "parcel": "^2.6.0"
+  },
+  "dependencies": {
+    "three": "^0.141.0"
+  },
+  "targets": {
+    "default": {
+      "distDir": "./dist"
+    }
+  }
+}
