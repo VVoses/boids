@@ -1,24 +1,24 @@
 import './style.css';
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
-import {FlyControls} from 'three/examples/jsm/controls/FlyControls';
-
 
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
 
-// The three.js scene: the 3D world where you put objects
 const scene = new THREE.Scene();
 
-// The camera
 const camera = new THREE.PerspectiveCamera(
   90,
   window.innerWidth / window.innerHeight,
   0.1,
   1000000
 );
+
+
+let boids = []
+let prevBoids = []
 
 scene.add(camera)
 
@@ -29,32 +29,22 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setClearColor('black', 1);
 
-window.addEventListener('resize', () => {
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
-
-let boids = []
-let prevBoids = []
-for(let i = 0; i < 100; i++) {
-  boids[i] = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), new THREE.MeshBasicMaterial({ color: 'white'}))
-  boids[i].position.x = Math.random()
-  boids[i].position.y = Math.random()
-  boids[i].position.z = Math.random()
-  boids[i].velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random())
+function createBoid() {
+  const newBoid = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({ color: 'white'}))
+  newBoid.position = new THREE.Vector3([Math.random(), Math.random(), Math.random()].map(x => x*1000))
+  newBoid.velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random())
+  return newBoid
 }
 
-boids.forEach(boid => scene.add(boid))
+function setupBoids() {
+  for(let i = 0; i < 20; i++) {
+    const newBoid = createBoid()
+    boids[i] = newBoid
+  }
+  boids.forEach(boid => scene.add(boid))
+}
 
-camera.position.z = 10
-
-function rule1(boid) {
+function moveToCenter(boid) {
   let vec = [0, 0, 0]
   boids.forEach(boid2 => {
     if (boid.uuid !== boid2.uuid) {
@@ -74,8 +64,7 @@ function rule1(boid) {
   return result
 }
 
-function rule2(boid) {
-  distance = 100
+function avoidOtherBoids(boid, distance) {
   let result = [0, 0, 0]
   boids.forEach(boid2 => {
     if (boid.uuid !== boid2.uuid) {
@@ -89,16 +78,13 @@ function rule2(boid) {
   return result
 }
 
-function rule3(boid) {
+function matchVelocity(boid) {
   let vec = [0, 0, 0]
-  let prev = []
   boids.forEach((boid2, idx) => {
     if (boid.uuid !== boid2.uuid) {
       vec[0] += boid2.velocity.x
       vec[1] += boid2.velocity.y
       vec[2] += boid2.velocity.z
-    } else {
-      prev = boid2
     }
   })
   vec = vec.map(scalar => scalar/(boids.length-1))
@@ -106,6 +92,40 @@ function rule3(boid) {
             vec[1] - boid.velocity.y,
             vec[2] - boid.velocity.z]
     .map(x => x/10)
+  return result
+}
+
+function stayWithinBounds(boid, boundingBoxSize) {
+  const halfBoundsSize = boundingBoxSize / 2;
+  const positiveBounds = new THREE.Vector3(halfBoundsSize, halfBoundsSize, halfBoundsSize);
+  const negativeBounds = new THREE.Vector3(-halfBoundsSize, -halfBoundsSize, -halfBoundsSize);
+
+  const turnFactor = 1;
+  let vec = [0, 0, 0];
+
+  if(boid.position.x > positiveBounds.x) {
+    vec[0] -= turnFactor
+  }
+
+  if(boid.position.y > positiveBounds.y) {
+    vec[1] -= turnFactor
+  }
+
+  if(boid.position.z > positiveBounds.z) {
+    vec[2] -= turnFactor
+  }
+
+  if(boid.position.x < negativeBounds.x) {
+    vec[0] += turnFactor
+  }
+
+  if(boid.position.y < negativeBounds.y) {
+    vec[1] += turnFactor
+  }
+
+  if(boid.position.z < negativeBounds.z) {
+    vec[2] += turnFactor
+  }
   return vec
 }
 
@@ -113,27 +133,27 @@ function magnitude(vector) {
   return Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
 }
 
-const maxSpeed = 0.33
+const maxSpeed = 0.033
 
-const cameraOffset = new THREE.Vector3(1000, 1000, 1000)
 
-const controls = new FlyControls(camera, canvas);
+camera.position.x = 1000
+camera.position.y = 1000
+const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
 function render() {
-
-  prevBoids = boids
-
+  const distance = 200
+  const boundingBoxSize = 1000
   boids.forEach((boid, idx) => {
-
-    vec1 = rule1(boid)
-    vec2 = rule2(boid)
-    vec3 = rule3(boid)
+    vec1 = moveToCenter(boid)
+    vec2 = avoidOtherBoids(boid, distance)
+    vec3 = matchVelocity(boid)
+    vec4 = stayWithinBounds(boid, boundingBoxSize)
 
     const finalVec = [
-      vec1[0] + vec2[0] + vec3[0],
-      vec1[1] + vec2[1] + vec3[1],
-      vec1[2] + vec2[2] + vec3[2]
+      vec1[0] + vec2[0] + vec3[0] + vec4[0],
+      vec1[1] + vec2[1] + vec3[1] + vec4[1],
+      vec1[2] + vec2[2] + vec3[2] + vec4[2]
     ]
 
     boid.velocity.x += magnitude(finalVec) < maxSpeed ? finalVec[0] : (finalVec[0] / magnitude(finalVec))*maxSpeed
@@ -151,6 +171,27 @@ function render() {
   controls.update()
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+
 }
 
-render();
+window.onload = () => {
+  window.addEventListener('resize', () => {
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
+
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
+
+  window.addEventListener('click', () => {
+    const newBoid = createBoid()
+    boids.push(newBoid)
+    scene.add(newBoid)
+  })
+
+  setupBoids();
+  render();
+}
