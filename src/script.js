@@ -1,7 +1,5 @@
-import './style.css';
-import * as THREE from 'three'.then(() => {
-  load()
-})
+import './style.css'
+import {Scene, Vector3, PerspectiveCamera, SphereGeometry, MeshBasicMaterial, WebGLRenderer, Mesh} from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
 const sizes = {
@@ -9,9 +7,9 @@ const sizes = {
   height: window.innerHeight,
 };
 
-const scene = new THREE.Scene();
+const scene = new Scene();
 
-const camera = new THREE.PerspectiveCamera(
+const camera = new PerspectiveCamera(
   90,
   window.innerWidth / window.innerHeight,
   0.1,
@@ -26,14 +24,14 @@ scene.add(camera)
 
 const canvas = document.querySelector('.webgl');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
+const renderer = new WebGLRenderer({ antialias: true, canvas });
 
 renderer.setSize(sizes.width, sizes.height);
 renderer.setClearColor('black', 1);
 
 function createBoid() {
-  const newBoid = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({ color: 'white'}))
-  newBoid.velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random())
+  const newBoid = new Mesh(new SphereGeometry(Math.random()*10), new MeshBasicMaterial({ color: 'white'}))
+  newBoid.velocity = new Vector3(Math.random(), Math.random(), Math.random())
   return newBoid
 }
 
@@ -45,13 +43,15 @@ function setupBoids() {
   boids.forEach(boid => scene.add(boid))
 }
 
-function moveToCenter(boid) {
+function moveToCenter(boid, sight) {
   let vec = [0, 0, 0]
   boids.forEach(boid2 => {
     if (boid.uuid !== boid2.uuid) {
-      vec[0] += boid2.position.x
-      vec[1] += boid2.position.y
-      vec[2] += boid2.position.z
+      if( boid.position.distanceTo(boid2.position) < sight) {
+        vec[0] += boid2.position.x
+        vec[1] += boid2.position.y
+        vec[2] += boid2.position.z
+      }
     }
   })
   vec = vec
@@ -61,7 +61,7 @@ function moveToCenter(boid) {
     vec[1] - boid.position.y,
     vec[2] - boid.position.z
   ]
-    .map(x => x/200)
+    .map(x => x/2000)
   return result
 }
 
@@ -79,7 +79,7 @@ function avoidOtherBoids(boid, distance) {
   return result
 }
 
-function matchVelocity(boid) {
+function matchVelocity(boid, factor) {
   let vec = [0, 0, 0]
   boids.forEach((boid2, idx) => {
     if (boid.uuid !== boid2.uuid) {
@@ -92,14 +92,14 @@ function matchVelocity(boid) {
   result = [vec[0] - boid.velocity.x,
             vec[1] - boid.velocity.y,
             vec[2] - boid.velocity.z]
-    .map(x => x/10)
+    .map(x => x/factor)
   return result
 }
 
 function stayWithinBounds(boid, boundingBoxSize) {
   const halfBoundsSize = boundingBoxSize / 2;
-  const positiveBounds = new THREE.Vector3(halfBoundsSize, halfBoundsSize, halfBoundsSize);
-  const negativeBounds = new THREE.Vector3(-halfBoundsSize, -halfBoundsSize, -halfBoundsSize);
+  const positiveBounds = new Vector3(halfBoundsSize, halfBoundsSize, halfBoundsSize);
+  const negativeBounds = new Vector3(-halfBoundsSize, -halfBoundsSize, -halfBoundsSize);
 
   const turnFactor = 1;
   let vec = [0, 0, 0];
@@ -134,7 +134,7 @@ function magnitude(vector) {
   return Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
 }
 
-const maxSpeed = 0.033
+const maxSpeed = 0.33
 
 
 camera.position.x = 1000
@@ -143,12 +143,14 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
 function render() {
-  const distance = 100
-  const boundingBoxSize = 1000
+  const distance = 150
+  const boundingBoxSize = 2000
+  const sight = 200
+  const factor = 300
   boids.forEach((boid, idx) => {
-    vec1 = moveToCenter(boid)
+    vec1 = moveToCenter(boid, sight)
     vec2 = avoidOtherBoids(boid, distance)
-    vec3 = matchVelocity(boid)
+    vec3 = matchVelocity(boid, factor)
     vec4 = stayWithinBounds(boid, boundingBoxSize)
 
     const finalVec = [
@@ -166,7 +168,7 @@ function render() {
     boid.position.z += boid.velocity.z
   })
 
-  //const objectPosition = boids[99].getWorldPosition(new THREE.Vector3())
+  //const objectPosition = boids[99].getWorldPosition(new Vector3())
   //camera.position.copy(objectPosition).add(cameraOffset)
 
   controls.update()
@@ -175,7 +177,7 @@ function render() {
 
 }
 
-load = () => {
+window.onload = () => {
   window.addEventListener('resize', () => {
     sizes.width = window.innerWidth;
     sizes.height = window.innerHeight;
@@ -188,9 +190,13 @@ load = () => {
   });
 
   window.addEventListener('click', () => {
-    const newBoid = createBoid()
-    boids.push(newBoid)
-    scene.add(newBoid)
+    for(let i = 0; i < 10; i++) {
+      setTimeout(() => {
+        const newBoid = createBoid()
+        boids.push(newBoid)
+        scene.add(newBoid)
+      }, Math.random()*100)
+    }
   })
 
   setupBoids();

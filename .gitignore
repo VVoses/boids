@@ -8,6 +8,7 @@ node_modules/
 dist/
 .yarn/
 .parcel-cache/
+.cache/
 
 
 # Compiled Java class files
