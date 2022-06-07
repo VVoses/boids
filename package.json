@@ -3,10 +3,11 @@
   "source": "src/index.html",
   "scripts": {
     "start": "parcel",
-    "build": "parcel build src/index.html && yarn start"
+    "build": "parcel build src/index.html"
   },
   "packageManager": "yarn@3.2.1",
   "devDependencies": {
+    "@parcel/resolver-glob": "^2.6.0",
     "parcel": "^2.6.0"
   },
   "dependencies": {
