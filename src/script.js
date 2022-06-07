@@ -1,5 +1,7 @@
 import './style.css';
-import * as THREE from 'three'
+import * as THREE from 'three'.then(() => {
+  load()
+})
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
 const sizes = {
@@ -31,7 +33,6 @@ renderer.setClearColor('black', 1);
 
 function createBoid() {
   const newBoid = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({ color: 'white'}))
-  newBoid.position = new THREE.Vector3([Math.random(), Math.random(), Math.random()].map(x => x*1000))
   newBoid.velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random())
   return newBoid
 }
@@ -142,7 +143,7 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
 function render() {
-  const distance = 200
+  const distance = 100
   const boundingBoxSize = 1000
   boids.forEach((boid, idx) => {
     vec1 = moveToCenter(boid)
@@ -174,7 +175,7 @@ function render() {
 
 }
 
-window.onload = () => {
+load = () => {
   window.addEventListener('resize', () => {
     sizes.width = window.innerWidth;
     sizes.height = window.innerHeight;
