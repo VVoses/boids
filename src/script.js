@@ -1,5 +1,5 @@
 import './style.css'
-import {Scene, Vector3, PerspectiveCamera, SphereGeometry, MeshBasicMaterial, WebGLRenderer, Mesh} from 'three';
+import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
 const sizes = {
@@ -7,9 +7,9 @@ const sizes = {
   height: window.innerHeight,
 };
 
-const scene = new Scene();
+const scene = new THREE.Scene();
 
-const camera = new PerspectiveCamera(
+const camera = new THREE.PerspectiveCamera(
   90,
   window.innerWidth / window.innerHeight,
   0.1,
@@ -24,14 +24,24 @@ scene.add(camera)
 
 const canvas = document.querySelector('.webgl');
 
-const renderer = new WebGLRenderer({ antialias: true, canvas });
+const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 
 renderer.setSize(sizes.width, sizes.height);
 renderer.setClearColor('black', 1);
 
+const colors = [
+  'yellow',
+  'red',
+  'blue',
+  'orange',
+  'indigo',
+  'purple',
+  'green'
+]
+
 function createBoid() {
-  const newBoid = new Mesh(new SphereGeometry(Math.random()*10), new MeshBasicMaterial({ color: 'white'}))
-  newBoid.velocity = new Vector3(Math.random(), Math.random(), Math.random())
+  const newBoid = new THREE.Mesh(new THREE.SphereGeometry(Math.random()*10), new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random() * colors.length)]}))
+  newBoid.velocity = new THREE.Vector3(Math.random(), Math.random(), Math.random())
   return newBoid
 }
 
@@ -56,13 +66,12 @@ function moveToCenter(boid, sight) {
   })
   vec = vec
     .map(scalar => scalar/(boids.length-1))
-  result = [
+  return [
     vec[0] - boid.position.x,
     vec[1] - boid.position.y,
     vec[2] - boid.position.z
   ]
     .map(x => x/2000)
-  return result
 }
 
 function avoidOtherBoids(boid, distance) {
@@ -89,17 +98,17 @@ function matchVelocity(boid, factor) {
     }
   })
   vec = vec.map(scalar => scalar/(boids.length-1))
-  result = [vec[0] - boid.velocity.x,
-            vec[1] - boid.velocity.y,
-            vec[2] - boid.velocity.z]
-    .map(x => x/factor)
-  return result
+
+  return  [vec[0] - boid.velocity.x,
+              vec[1] - boid.velocity.y,
+              vec[2] - boid.velocity.z]
+      .map(x => x/factor)
 }
 
 function stayWithinBounds(boid, boundingBoxSize) {
   const halfBoundsSize = boundingBoxSize / 2;
-  const positiveBounds = new Vector3(halfBoundsSize, halfBoundsSize, halfBoundsSize);
-  const negativeBounds = new Vector3(-halfBoundsSize, -halfBoundsSize, -halfBoundsSize);
+  const positiveBounds = new THREE.Vector3(halfBoundsSize, halfBoundsSize, halfBoundsSize);
+  const negativeBounds = new THREE.Vector3(-halfBoundsSize, -halfBoundsSize, -halfBoundsSize);
 
   const turnFactor = 1;
   let vec = [0, 0, 0];
@@ -143,15 +152,15 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
 function render() {
-  const distance = 150
+  const distance = 50
   const boundingBoxSize = 2000
-  const sight = 200
-  const factor = 300
+  const sight = 60
+  const factor = 40
   boids.forEach((boid, idx) => {
-    vec1 = moveToCenter(boid, sight)
-    vec2 = avoidOtherBoids(boid, distance)
-    vec3 = matchVelocity(boid, factor)
-    vec4 = stayWithinBounds(boid, boundingBoxSize)
+    const vec1 = moveToCenter(boid, sight)
+    const vec2 = avoidOtherBoids(boid, distance)
+    const vec3 = matchVelocity(boid, factor)
+    const vec4 = stayWithinBounds(boid, boundingBoxSize)
 
     const finalVec = [
       vec1[0] + vec2[0] + vec3[0] + vec4[0],
