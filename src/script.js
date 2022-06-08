@@ -93,13 +93,15 @@ function avoidOtherBoids(boid, distance) {
   return result;
 }
 
-function matchVelocity(boid, factor) {
+function matchVelocity(boid, factor, sight) {
   let vec = [0, 0, 0];
   boids.forEach((boid2, idx) => {
     if (boid.uuid !== boid2.uuid) {
-      vec[0] += boid2.velocity.x;
-      vec[1] += boid2.velocity.y;
-      vec[2] += boid2.velocity.z;
+      if (boid.position.distanceTo(boid2.position) < sight) {
+        vec[0] += boid2.velocity.x;
+        vec[1] += boid2.velocity.y;
+        vec[2] += boid2.velocity.z;
+      }
     }
   });
   vec = vec.map((scalar) => scalar / (boids.length - 1));
@@ -166,19 +168,18 @@ function getVelocity(vector, scalar) {
 const params = {
   matchVelocityFactor: 8,
   cohesionFactor: 100,
-  distance: 100,
+  distance: 200,
   boundingBoxSize: 500,
   sight: 125,
   maxSpeed: 0.1,
 };
 
-gui.add(params, "matchVelocityFactor").max(100).min(-100);
+gui.add(params, "matchVelocityFactor").max(20).min(0);
 gui.add(params, "cohesionFactor").max(500).min(0);
 gui.add(params, "distance").max(1000).min(0);
 gui.add(params, "sight").max(1000).min(0);
-gui.add(params, "maxSpeed").max(5).min(0);
+gui.add(params, "maxSpeed").max(5).min(0.01);
 gui.add(params, "boundingBoxSize").max(1000).min(0);
-
 
 window.onload = () => {
   window.addEventListener("resize", () => {
@@ -224,7 +225,7 @@ function render() {
     const vecs = [
       moveToCenter(boid, params.sight, params.cohesionFactor),
       avoidOtherBoids(boid, params.distance),
-      matchVelocity(boid, params.matchVelocityFactor),
+      matchVelocity(boid, params.matchVelocityFactor, params.sight),
       stayWithinBounds(boid, params.boundingBoxSize),
     ];
 
