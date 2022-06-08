@@ -134,9 +134,9 @@ function stayWithinBounds(boid, boundingBoxSize) {
   return vec;
 }
 
-function waves(boid, waveFactor) {
+function currents(boid, currentFactor) {
   return [Math.cos(boid.position.x), Math.sin(boid.position.y), 0].map(
-    (x) => x/waveFactor
+    (x) => x / currentFactor
   );
 }
 
@@ -156,17 +156,17 @@ const params = {
   minDistanceOther: 200,
   boundingBoxSize: 500,
   sightRadius: 125,
-  maxSpeed: 0.1,
-  waveFactor: 10,
+  maxSpeed: 0.33,
+  currentFactor: 100,
 };
 
-gui.add(params, "matchVelocityFactor").max(20).min(0.1);
-gui.add(params, "cohesionFactor").max(500).min(0.1);
+gui.add(params, "matchVelocityFactor").max(20).min(1);
+gui.add(params, "cohesionFactor").max(500).min(1);
+gui.add(params, "currentFactor").max(100).min(1);
 gui.add(params, "minDistanceOther").max(1000).min(0.1);
 gui.add(params, "sightRadius").max(1000).min(0.1);
 gui.add(params, "maxSpeed").max(5).min(0.01);
 gui.add(params, "boundingBoxSize").max(1000).min(0.1);
-gui.add(params, "waveFactor").max(100).min(0.1);
 
 function getRandomPosition() {
   return Math.random() > 0.6 ? Math.random() * 1000 : Math.random() * -1000;
@@ -235,7 +235,7 @@ function render() {
       avoidOtherBoids(boid, params.minDistanceOther),
       matchVelocity(boid, params.matchVelocityFactor, params.sightRadius),
       stayWithinBounds(boid, params.boundingBoxSize),
-      waves(boid, params.waveFactor),
+      currents(boid, params.currentFactor),
     ];
 
     const finalVec = vecs.reduce((curr, prev) => {
