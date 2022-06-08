@@ -10,6 +10,9 @@ dist/
 .parcel-cache/
 .cache/
 
+#webpack
+public
+
 
 # Compiled Java class files
 *.class
