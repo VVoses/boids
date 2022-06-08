@@ -31,27 +31,6 @@ renderer.setClearColor("black", 1);
 
 const colors = ["yellow", "red", "blue", "orange", "indigo", "purple", "green"];
 
-function getRandomPosition() {
-  return Math.random() > 0.6 ? Math.random() * 1000 : Math.random() * -1000;
-}
-
-function createBoid() {
-  const seed = Math.random();
-  const newBoid = new THREE.Mesh(
-    new THREE.SphereGeometry(Math.floor(seed * 10)),
-    new THREE.MeshBasicMaterial({
-      color: colors[Math.floor(seed * colors.length)],
-    })
-  );
-  newBoid.position.x = getRandomPosition();
-  newBoid.position.y = getRandomPosition();
-  newBoid.position.z = getRandomPosition();
-  newBoid.velocity = new THREE.Vector3(
-    ...new Array(3).map(() => Math.random())
-  );
-  return newBoid;
-}
-
 function setupBoids() {
   for (let i = 0; i < 20; i++) {
     const newBoid = createBoid();
@@ -174,12 +153,34 @@ const params = {
   maxSpeed: 0.1,
 };
 
-gui.add(params, "matchVelocityFactor").max(20).min(0);
-gui.add(params, "cohesionFactor").max(500).min(0);
-gui.add(params, "distance").max(1000).min(0);
-gui.add(params, "sight").max(1000).min(0);
+gui.add(params, "matchVelocityFactor").max(20).min(0.1);
+gui.add(params, "cohesionFactor").max(500).min(0.1);
+gui.add(params, "distance").max(1000).min(0.1);
+gui.add(params, "sight").max(1000).min(0.1);
 gui.add(params, "maxSpeed").max(5).min(0.01);
-gui.add(params, "boundingBoxSize").max(1000).min(0);
+gui.add(params, "boundingBoxSize").max(1000).min(0.1);
+
+
+function getRandomPosition() {
+  return Math.random() > 0.6 ? Math.random() * 1000 : Math.random() * -1000;
+}
+
+function createBoid() {
+  const seed = Math.random();
+  const newBoid = new THREE.Mesh(
+    new THREE.SphereGeometry(Math.floor(seed * 10)),
+    new THREE.MeshBasicMaterial({
+      color: colors[Math.floor(seed * colors.length)],
+    })
+  );
+  newBoid.position.x = getRandomPosition();
+  newBoid.position.y = getRandomPosition();
+  newBoid.position.z = getRandomPosition();
+  newBoid.velocity = new THREE.Vector3(
+    ...new Array(3).map(() => Math.random())
+  );
+  return newBoid;
+}
 
 window.onload = () => {
   window.addEventListener("resize", () => {
