@@ -11,8 +11,6 @@ dist/
 .cache/
 
 #webpack
-public
-
 
 # Compiled Java class files
 *.class
@@ -29,6 +27,7 @@ public
 # Maven
 target/
 dist/
+public
 
 # JetBrains IDE
 .idea/
