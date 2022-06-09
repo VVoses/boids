@@ -105,7 +105,7 @@ function stayWithinBounds(boid, boundingBoxSize) {
     -halfBoundsSize
   );
 
-  const turnFactor = 0.1;
+  const turnFactor = 1;
   let vec = [0, 0, 0];
 
   if (boid.position.x > positiveBounds.x) {
